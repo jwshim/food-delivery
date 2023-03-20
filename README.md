@@ -423,8 +423,191 @@ http localhost:8081/orders item=피자 storeId=2   #Success
 
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
 
+- 주문 / 결제 정보 업데이트 / 카프카 이벤트 
+```
+gitpod /workspace/food-delivery (main) $ http :8081/orders foodId=1 addres="korea seoul 123" customerId=1 storeId=2 status="ordered"
+HTTP/1.1 201 
+Connection: keep-alive
+Content-Type: application/json
+Date: Mon, 20 Mar 2023 10:22:18 GMT
+Keep-Alive: timeout=60
+Location: http://localhost:8081/orders/1
+Transfer-Encoding: chunked
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
 
-결제가 이루어진 후에 상점시스템으로 이를 알려주는 행위는 동기식이 아니라 비 동기식으로 처리하여 상점 시스템의 처리를 위하여 결제주문이 블로킹 되지 않아도록 처리한다.
+{
+    "_links": {
+        "order": {
+            "href": "http://localhost:8081/orders/1"
+        },
+        "self": {
+            "href": "http://localhost:8081/orders/1"
+        }
+    },
+    "address": null,
+    "customerId": 1,
+    "foodId": 1,
+    "options": null,
+    "status": "ordered",
+    "storeId": 2
+}
+
+gitpod /workspace/food-delivery (main) $ http :8081/payments
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/hal+json
+Date: Mon, 20 Mar 2023 10:24:04 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+
+{
+    "_embedded": {
+        "payments": [
+            {
+                "_links": {
+                    "pay": {
+                        "href": "http://localhost:8081/payments/2/pay"
+                    },
+                    "payment": {
+                        "href": "http://localhost:8081/payments/2"
+                    },
+                    "self": {
+                        "href": "http://localhost:8081/payments/2"
+                    }
+                },
+                "orderId": 1,
+                "status": "wait for pay"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8081/profile/payments"
+        },
+        "self": {
+            "href": "http://localhost:8081/payments"
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 1,
+        "totalPages": 1
+    }
+}
+
+{"eventType":"OrderPlaced","timestamp":1679307737924,"id":1,"foodId":1,"options":null,"address":null,"customerId":1,"status":"ordered","storeId":2}
+```
+
+- 사용자 결제 / 페이먼트 상태 변화 / 푸드 쿠킹 업데이트 확인 / 카프카 이벤트 
+```
+gitpod /workspace/food-delivery (main) $ http PUT :8081/payments/2/pay
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/json;charset=UTF-8
+Date: Mon, 20 Mar 2023 10:25:09 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+
+{
+    "id": 2,
+    "orderId": 1,
+    "status": "order paid"
+}
+
+gitpod /workspace/food-delivery (main) $ http :8081/payments/2
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/hal+json
+Date: Mon, 20 Mar 2023 10:26:02 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+
+{
+    "_links": {
+        "pay": {
+            "href": "http://localhost:8081/payments/2/pay"
+        },
+        "payment": {
+            "href": "http://localhost:8081/payments/2"
+        },
+        "self": {
+            "href": "http://localhost:8081/payments/2"
+        }
+    },
+    "orderId": 1,
+    "status": "order paid"
+}
+
+gitpod /workspace/food-delivery (main) $ http :8082/foodCookings
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/hal+json
+Date: Mon, 20 Mar 2023 10:27:08 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+
+{
+    "_embedded": {
+        "foodCookings": [
+            {
+                "_links": {
+                    "accept": {
+                        "href": "http://localhost:8082/foodCookings/1/accept"
+                    },
+                    "finish": {
+                        "href": "http://localhost:8082/foodCookings/1/finish"
+                    },
+                    "foodCooking": {
+                        "href": "http://localhost:8082/foodCookings/1"
+                    },
+                    "self": {
+                        "href": "http://localhost:8082/foodCookings/1"
+                    },
+                    "start": {
+                        "href": "http://localhost:8082/foodCookings/1/start"
+                    }
+                },
+                "foodId": 1,
+                "options": [],
+                "orderId": 1,
+                "status": "order paid",
+                "storeId": 2
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8082/profile/foodCookings"
+        },
+        "search": {
+            "href": "http://localhost:8082/foodCookings/search"
+        },
+        "self": {
+            "href": "http://localhost:8082/foodCookings"
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 1,
+        "totalPages": 1
+    }
+}
+
+{"eventType":"Paid","timestamp":1679307909457,"id":2,"orderId":1,"status":"order paid"}
+```
  
 - 이를 위하여 결제이력에 기록을 남긴 후에 곧바로 결제승인이 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
  
