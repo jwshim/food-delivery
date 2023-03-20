@@ -114,6 +114,24 @@ public class PolicyHandler{
         
 
     }
+    @StreamListener(value=KafkaProcessor.INPUT, condition="headers['type']=='Delivered'")
+    public void wheneverDelivered_Notify(@Payload Delivered delivered){
+
+        Delivered event = delivered;
+        System.out.println("\n\n##### listener Notify : " + delivered + "\n\n");
+
+        // REST Request Sample
+        
+        // orderService.getOrder(/** mapping value needed */);
+
+
+        
+
+        // Sample Logic //
+
+        
+
+    }
 
 }
 

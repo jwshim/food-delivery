@@ -138,6 +138,27 @@ public class FoodCooking  {
 
         
     }
+    public static void updateStatus(OrderCanceled orderCanceled){
+
+        /** Example 1:  new item 
+        FoodCooking foodCooking = new FoodCooking();
+        repository().save(foodCooking);
+
+        */
+
+        /** Example 2:  finding and process
+        
+        repository().findById(orderCanceled.get???()).ifPresent(foodCooking->{
+            
+            foodCooking // do something
+            repository().save(foodCooking);
+
+
+         });
+        */
+
+        
+    }
 
 
 }
