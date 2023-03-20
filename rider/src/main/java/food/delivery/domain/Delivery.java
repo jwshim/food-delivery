@@ -1,73 +1,47 @@
 package food.delivery.domain;
 
-import food.delivery.domain.Picked;
-import food.delivery.domain.Delivered;
 import food.delivery.RiderApplication;
-import javax.persistence.*;
-import java.util.List;
-import lombok.Data;
 import java.util.Date;
-
+import java.util.List;
+import javax.persistence.*;
+import lombok.Data;
 
 @Entity
-@Table(name="Delivery_table")
+@Table(name = "Delivery_table")
 @Data
+public class Delivery {
 
-public class Delivery  {
-
-
-    
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    
-    
-    
-    
-    
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    
-    
-    
-    
-    
+
     private String status;
-    
-    
-    
-    
-    
-    private String orderId;
-    
-    
-    
-    
-    
+
+    private Long orderId;
+
     private String address;
 
     @PostPersist
-    public void onPostPersist(){
+    public void onPostPersist() {}
 
-
-        Picked picked = new Picked(this);
-        picked.publishAfterCommit();
-
-
-
-        Delivered delivered = new Delivered(this);
-        delivered.publishAfterCommit();
-
-    }
-
-    public static DeliveryRepository repository(){
-        DeliveryRepository deliveryRepository = RiderApplication.applicationContext.getBean(DeliveryRepository.class);
+    public static DeliveryRepository repository() {
+        DeliveryRepository deliveryRepository = RiderApplication.applicationContext.getBean(
+            DeliveryRepository.class
+        );
         return deliveryRepository;
     }
 
+    public void pick() {
+        Picked picked = new Picked(this);
+        picked.publishAfterCommit();
+    }
 
+    public void confirmDelivered() {
+        Delivered delivered = new Delivered(this);
+        delivered.publishAfterCommit();
+    }
 
-
-    public static void newOrder(OrderPlaced orderPlaced){
-
+    public static void newOrder(OrderPlaced orderPlaced) {
         /** Example 1:  new item 
         Delivery delivery = new Delivery();
         repository().save(delivery);
@@ -85,10 +59,9 @@ public class Delivery  {
          });
         */
 
-        
     }
-    public static void updateStatus(CookFinished cookFinished){
 
+    public static void updateStatus(CookFinished cookFinished) {
         /** Example 1:  new item 
         Delivery delivery = new Delivery();
         repository().save(delivery);
@@ -106,10 +79,9 @@ public class Delivery  {
          });
         */
 
-        
     }
-    public static void updateStatus(OrderCanceled orderCanceled){
 
+    public static void updateStatus(OrderCanceled orderCanceled) {
         /** Example 1:  new item 
         Delivery delivery = new Delivery();
         repository().save(delivery);
@@ -127,8 +99,5 @@ public class Delivery  {
          });
         */
 
-        
     }
-
-
 }

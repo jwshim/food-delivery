@@ -6,17 +6,20 @@
 
         <v-card-text>
             <div>
-                <String label="FoodId" v-model="item.foodId" :editMode="editMode" @change="change" />
+                <Number label="FoodId" v-model="item.foodId" :editMode="editMode" @change="change" />
             </div>
             <StringManager offline label="Options" v-model="item.options" :editMode="false" @change="change" />
             <div>
                 <String label="Address" v-model="item.address" :editMode="editMode" @change="change" />
             </div>
             <div>
-                <String label="CustomerId" v-model="item.customerId" :editMode="editMode" @change="change" />
+                <Number label="CustomerId" v-model="item.customerId" :editMode="editMode" @change="change" />
             </div>
             <div>
-                <String label="StoreId" v-model="item.storeId" :editMode="editMode" @change="change" />
+                <Number label="StoreId" v-model="item.storeId" :editMode="editMode" @change="change" />
+            </div>
+            <div>
+                <String label="Status" v-model="item.status" :editMode="editMode" @change="change" />
             </div>
         </v-card-text>
 

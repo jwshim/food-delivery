@@ -5,21 +5,23 @@ import food.delivery.infra.AbstractEvent;
 import java.util.*;
 import lombok.*;
 
-
 @Data
 @ToString
 public class OrderCanceled extends AbstractEvent {
 
     private Long id;
-    private String foodId;
-    private String options;
+    private Long foodId;
+    private List<String> options;
     private String address;
-    private String customerId;
+    private Long customerId;
+    private String status;
+    private Long storeId;
 
-    public OrderCanceled(Order aggregate){
+    public OrderCanceled(Order aggregate) {
         super(aggregate);
     }
-    public OrderCanceled(){
+
+    public OrderCanceled() {
         super();
     }
 }

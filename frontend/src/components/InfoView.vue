@@ -23,6 +23,8 @@
             headers: [
                 { text: "id", value: "id" },
                 { text: "status", value: "status" },
+                { text: "address", value: "address" },
+                { text: "orderId", value: "orderId" },
             ],
             info : [],
         }),

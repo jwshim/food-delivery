@@ -5,21 +5,23 @@ import food.delivery.infra.AbstractEvent;
 import java.util.*;
 import lombok.*;
 
-
 @Data
 @ToString
 public class OrderPlaced extends AbstractEvent {
 
     private Long id;
-    private String foodId;
-    private String options;
+    private Long foodId;
+    private List<String> options;
     private String address;
-    private String customerId;
+    private Long customerId;
+    private String status;
+    private Long storeId;
 
-    public OrderPlaced(Order aggregate){
+    public OrderPlaced(Order aggregate) {
         super(aggregate);
     }
-    public OrderPlaced(){
+
+    public OrderPlaced() {
         super();
     }
 }

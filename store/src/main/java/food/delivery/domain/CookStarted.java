@@ -5,22 +5,22 @@ import food.delivery.infra.AbstractEvent;
 import java.util.*;
 import lombok.*;
 
-
 @Data
 @ToString
 public class CookStarted extends AbstractEvent {
 
     private Long id;
     private String status;
-    private String foodId;
-    private String orderId;
+    private Long foodId;
+    private Long orderId;
     private List<String> options;
-    private String storeId;
+    private Long storeId;
 
-    public CookStarted(FoodCooking aggregate){
+    public CookStarted(FoodCooking aggregate) {
         super(aggregate);
     }
-    public CookStarted(){
+
+    public CookStarted() {
         super();
     }
 }

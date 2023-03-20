@@ -40,8 +40,7 @@ logging:
     org.springframework.cloud: debug
 
 api:
-  url:
-    front: localhost:8081
+  url: localhost:8084
 
 
 server:
@@ -74,7 +73,6 @@ spring:
           contentType: application/json
 
 api:
-  url:
-    front: localhost:8080
+  url: customer:8080
 
 

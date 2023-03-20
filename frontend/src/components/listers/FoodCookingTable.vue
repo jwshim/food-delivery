@@ -90,10 +90,10 @@
 
             this.newValue = {
                 'status': '',
-                'foodId': '',
-                'orderId': '',
+                'foodId': 0,
+                'orderId': 0,
                 'options': [],
-                'storeId': '',
+                'storeId': 0,
             }
         },
         methods: {

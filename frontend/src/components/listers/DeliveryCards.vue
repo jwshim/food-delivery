@@ -69,7 +69,7 @@
             
             me.newValue = {
                 'status': '',
-                'orderId': '',
+                'orderId': 0,
                 'address': '',
             }
         },
