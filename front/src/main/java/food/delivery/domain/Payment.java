@@ -31,6 +31,14 @@ public class Payment {
 
     public void pay() {
         Paid paid = new Paid(this);
+        System.out.println("==================");
+        System.out.println(paid.getId() + "/" + paid.getOrderId());
+        System.out.println("==================");
+        paid.setStatus("order paid");
+        repository().findById(paid.getId()).ifPresent(payment->{
+            payment.setStatus("order paid");
+            repository().save(payment);
+         });
         paid.publishAfterCommit();
     }
 
@@ -39,7 +47,11 @@ public class Payment {
         Payment payment = new Payment();
         repository().save(payment);
         */
-        // hahahaha
+
+        Payment payment = new Payment();
+        payment.setOrderId(orderPlaced.getId());
+        payment.setStatus("wait for pay");
+        repository().save(payment);
 
         /** Example 2:  finding and process
         
