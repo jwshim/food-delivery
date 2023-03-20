@@ -609,86 +609,365 @@ Vary: Access-Control-Request-Headers
 {"eventType":"Paid","timestamp":1679307909457,"id":2,"orderId":1,"status":"order paid"}
 ```
  
-- 이를 위하여 결제이력에 기록을 남긴 후에 곧바로 결제승인이 되었다는 도메인 이벤트를 카프카로 송출한다(Publish)
- 
+- 스토어 오우너 업셉트 / 푸드 쿠킹 상태 변화 / 카프카 이벤트 
 ```
-package fooddelivery;
+gitpod /workspace/food-delivery (main) $ http PUT http://localhost:8082/foodCookings/1/accept accept=true
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/json;charset=UTF-8
+Date: Mon, 20 Mar 2023 10:28:29 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
 
-@Entity
-@Table(name="결제이력_table")
-public class 결제이력 {
-
- ...
-    @PrePersist
-    public void onPrePersist(){
-        결제승인됨 결제승인됨 = new 결제승인됨();
-        BeanUtils.copyProperties(this, 결제승인됨);
-        결제승인됨.publish();
-    }
-
+{
+    "foodId": 1,
+    "id": 1,
+    "options": [],
+    "orderId": 1,
+    "status": "order accepted",
+    "storeId": 2
 }
-```
-- 상점 서비스에서는 결제승인 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다:
 
-```
-package fooddelivery;
+gitpod /workspace/food-delivery (main) $ http :8082/foodCookings/1
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/hal+json
+Date: Mon, 20 Mar 2023 10:29:15 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
 
-...
-
-@Service
-public class PolicyHandler{
-
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whenever결제승인됨_주문정보받음(@Payload 결제승인됨 결제승인됨){
-
-        if(결제승인됨.isMe()){
-            System.out.println("##### listener 주문정보받음 : " + 결제승인됨.toJson());
-            // 주문 정보를 받았으니, 요리를 슬슬 시작해야지..
-            
+{
+    "_links": {
+        "accept": {
+            "href": "http://localhost:8082/foodCookings/1/accept"
+        },
+        "finish": {
+            "href": "http://localhost:8082/foodCookings/1/finish"
+        },
+        "foodCooking": {
+            "href": "http://localhost:8082/foodCookings/1"
+        },
+        "self": {
+            "href": "http://localhost:8082/foodCookings/1"
+        },
+        "start": {
+            "href": "http://localhost:8082/foodCookings/1/start"
         }
-    }
-
+    },
+    "foodId": 1,
+    "options": [],
+    "orderId": 1,
+    "status": "order accepted",
+    "storeId": 2
 }
 
-```
-실제 구현을 하자면, 카톡 등으로 점주는 노티를 받고, 요리를 마친후, 주문 상태를 UI에 입력할테니, 우선 주문정보를 DB에 받아놓은 후, 이후 처리는 해당 Aggregate 내에서 하면 되겠다.:
-  
-```
-  @Autowired 주문관리Repository 주문관리Repository;
-  
-  @StreamListener(KafkaProcessor.INPUT)
-  public void whenever결제승인됨_주문정보받음(@Payload 결제승인됨 결제승인됨){
-
-      if(결제승인됨.isMe()){
-          카톡전송(" 주문이 왔어요! : " + 결제승인됨.toString(), 주문.getStoreId());
-
-          주문관리 주문 = new 주문관리();
-          주문.setId(결제승인됨.getOrderId());
-          주문관리Repository.save(주문);
-      }
-  }
-
+{"eventType":"OrderAccepted","timestamp":1679308109716,"id":1,"status":"order accepted","foodId":1,"orderId":1,"options":[],"storeId":2}
 ```
 
-상점 시스템은 주문/결제와 완전히 분리되어있으며, 이벤트 수신에 따라 처리되기 때문에, 상점시스템이 유지보수로 인해 잠시 내려간 상태라도 주문을 받는데 문제가 없다:
+- 음식 조리 시작 / 상태 변경 확인 / 카프카 이벤트 
 ```
-# 상점 서비스 (store) 를 잠시 내려놓음 (ctrl+c)
+gitpod /workspace/food-delivery (main) $ http PUT http://localhost:8082/foodCookings/1/start
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/json;charset=UTF-8
+Date: Mon, 20 Mar 2023 10:29:52 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
 
-#주문처리
-http localhost:8081/orders item=통닭 storeId=1   #Success
-http localhost:8081/orders item=피자 storeId=2   #Success
+{
+    "foodId": 1,
+    "id": 1,
+    "options": [],
+    "orderId": 1,
+    "status": "order cook started",
+    "storeId": 2
+}
 
-#주문상태 확인
-http localhost:8080/orders     # 주문상태 안바뀜 확인
+gitpod /workspace/food-delivery (main) $ http :8082/foodCookings/1
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/hal+json
+Date: Mon, 20 Mar 2023 10:30:19 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
 
-#상점 서비스 기동
-cd 상점
-mvn spring-boot:run
+{
+    "_links": {
+        "accept": {
+            "href": "http://localhost:8082/foodCookings/1/accept"
+        },
+        "finish": {
+            "href": "http://localhost:8082/foodCookings/1/finish"
+        },
+        "foodCooking": {
+            "href": "http://localhost:8082/foodCookings/1"
+        },
+        "self": {
+            "href": "http://localhost:8082/foodCookings/1"
+        },
+        "start": {
+            "href": "http://localhost:8082/foodCookings/1/start"
+        }
+    },
+    "foodId": 1,
+    "options": [],
+    "orderId": 1,
+    "status": "order cook started",
+    "storeId": 2
+}
 
-#주문상태 확인
-http localhost:8080/orders     # 모든 주문의 상태가 "배송됨"으로 확인
+{"eventType":"CookStarted","timestamp":1679308192985,"id":1,"status":"order accepted","foodId":1,"orderId":1,"options":[],"storeId":2}
 ```
 
+- 음식 조리 완료 / 상태 확인 / 카프카 이벤트 
+```
+gitpod /workspace/food-delivery (main) $ http PUT http://localhost:8082/foodCookings/1/finish
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/json;charset=UTF-8
+Date: Mon, 20 Mar 2023 10:30:47 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+
+{
+    "foodId": 1,
+    "id": 1,
+    "options": [],
+    "orderId": 1,
+    "status": "order cook finished",
+    "storeId": 2
+}
+
+gitpod /workspace/food-delivery (main) $ http :8082/foodCookings/1
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/hal+json
+Date: Mon, 20 Mar 2023 10:31:06 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+
+{
+    "_links": {
+        "accept": {
+            "href": "http://localhost:8082/foodCookings/1/accept"
+        },
+        "finish": {
+            "href": "http://localhost:8082/foodCookings/1/finish"
+        },
+        "foodCooking": {
+            "href": "http://localhost:8082/foodCookings/1"
+        },
+        "self": {
+            "href": "http://localhost:8082/foodCookings/1"
+        },
+        "start": {
+            "href": "http://localhost:8082/foodCookings/1/start"
+        }
+    },
+    "foodId": 1,
+    "options": [],
+    "orderId": 1,
+    "status": "order cook finished",
+    "storeId": 2
+}
+
+{"eventType":"CookFinished","timestamp":1679308247978,"id":1,"status":"order cook started","foodId":1,"orderId":1,"options":[],"storeId":2}
+```
+
+- 배달정보 확인 
+```
+gitpod /workspace/food-delivery (main) $ http :8083/deliveries
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/hal+json
+Date: Mon, 20 Mar 2023 10:31:54 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+
+{
+    "_embedded": {
+        "deliveries": [
+            {
+                "_links": {
+                    "confirmdelivered": {
+                        "href": "http://localhost:8083/deliveries/1/confirmdelivered"
+                    },
+                    "delivery": {
+                        "href": "http://localhost:8083/deliveries/1"
+                    },
+                    "pick": {
+                        "href": "http://localhost:8083/deliveries/1/pick"
+                    },
+                    "self": {
+                        "href": "http://localhost:8083/deliveries/1"
+                    }
+                },
+                "address": null,
+                "orderId": 1,
+                "status": "cook finished"
+            }
+        ]
+    },
+    "_links": {
+        "profile": {
+            "href": "http://localhost:8083/profile/deliveries"
+        },
+        "search": {
+            "href": "http://localhost:8083/deliveries/search"
+        },
+        "self": {
+            "href": "http://localhost:8083/deliveries"
+        }
+    },
+    "page": {
+        "number": 0,
+        "size": 20,
+        "totalElements": 1,
+        "totalPages": 1
+    }
+}
+```
+
+- 배달자 픽업 / 상태 확인 / 카프카 이벤트
+```
+gitpod /workspace/food-delivery (main) $ http PUT http://localhost:8083/deliveries/1/pick
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/json;charset=UTF-8
+Date: Mon, 20 Mar 2023 10:33:11 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+
+{
+    "address": null,
+    "id": 1,
+    "orderId": 1,
+    "status": "rider picked"
+}
+
+gitpod /workspace/food-delivery (main) $ http :8083/deliveries/1
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/hal+json
+Date: Mon, 20 Mar 2023 10:33:28 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+
+{
+    "_links": {
+        "confirmdelivered": {
+            "href": "http://localhost:8083/deliveries/1/confirmdelivered"
+        },
+        "delivery": {
+            "href": "http://localhost:8083/deliveries/1"
+        },
+        "pick": {
+            "href": "http://localhost:8083/deliveries/1/pick"
+        },
+        "self": {
+            "href": "http://localhost:8083/deliveries/1"
+        }
+    },
+    "address": null,
+    "orderId": 1,
+    "status": "rider picked"
+}
+
+{"eventType":"Picked","timestamp":1679308391048,"id":1,"status":"rider picked","orderId":1,"address":null}
+```
+
+- 배달 완료 / 상태 확인 / 카프카 메시지
+```
+gitpod /workspace/food-delivery (main) $ http http://localhost:8083/deliveries/1/confirmdelivered
+HTTP/1.1 405 
+Allow: PUT
+Connection: keep-alive
+Content-Type: application/json
+Date: Mon, 20 Mar 2023 10:34:39 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+
+{
+    "error": "Method Not Allowed",
+    "message": "",
+    "path": "/deliveries/1/confirmdelivered",
+    "status": 405,
+    "timestamp": "2023-03-20T10:34:39.685+00:00"
+}
+
+gitpod /workspace/food-delivery (main) $ http :8083/deliveries/1
+HTTP/1.1 200 
+Connection: keep-alive
+Content-Type: application/hal+json
+Date: Mon, 20 Mar 2023 10:35:13 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+
+{
+    "_links": {
+        "confirmdelivered": {
+            "href": "http://localhost:8083/deliveries/1/confirmdelivered"
+        },
+        "delivery": {
+            "href": "http://localhost:8083/deliveries/1"
+        },
+        "pick": {
+            "href": "http://localhost:8083/deliveries/1/pick"
+        },
+        "self": {
+            "href": "http://localhost:8083/deliveries/1"
+        }
+    },
+    "address": null,
+    "orderId": 1,
+    "status": "food delivered"
+}
+
+{"eventType":"Delivered","timestamp":1679308392048,"id":1,"status":"food delivered","orderId":1,"address":null}
+```
+- 주문상태 확인 (배송 완료됨)
+```
+gitpod /workspace/hw-food-delivery (main) $ http GET :8084/info/1  
+Connection: keep-alive
+Content-Type: application/hal+json
+Date: Mon, 20 Mar 2023 10:45:13 GMT
+Keep-Alive: timeout=60
+Transfer-Encoding: chunked
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+
+{
+    "_links": {
+        "cus": {
+            "href": "http://localhost:8085/info/1"
+        },
+        "self": {
+            "href": "http://localhost:8085/info/1"
+        }
+    },
+    "orderId": 1,
+    "status": "food delivered"
+}
+```
 
 # 운영
 
