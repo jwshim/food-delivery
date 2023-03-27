@@ -2,127 +2,234 @@
 ![image](https://user-images.githubusercontent.com/13327344/226316891-94f25742-47eb-4964-b33a-97fff727c584.png)
 # 2. CQRS
 ```
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+package food.delivery.infra;
+
 import food.delivery.config.kafka.KafkaProcessor;
 import food.delivery.domain.*;
-import javax.naming.NameParser;
-import javax.naming.NameParser;
-import javax.transaction.Transactional;
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 @Service
-@Transactional
-public class PolicyHandler {
+public class InfoViewHandler {
+
+    @Autowired
+    private InfoRepository infoRepository;
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void whatever(@Payload String eventString) {}
+    public void whenOrderPlaced_then_CREATE_1(
+        @Payload OrderPlaced orderPlaced
+    ) {
+        try {
+            if (!orderPlaced.validate()) return;
 
-    @StreamListener(
-        value = KafkaProcessor.INPUT,
-        condition = "headers['type']=='OrderAccepted'"
-    )
-    public void wheneverOrderAccepted_Notify(
+            // view 객체 생성
+            Info info = new Info();
+            // view 객체에 이벤트의 Value 를 set 함
+            info.setOrderId(orderPlaced.getId());
+            info.setStatus(orderPlaced.getStatus());
+            info.setAddress(orderPlaced.getAddress());
+            // view 레파지 토리에 save
+            infoRepository.save(info);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenPaid_then_UPDATE_1(@Payload Paid paid) {
+        try {
+            if (!paid.validate()) return;
+            // view 객체 조회
+
+            List<Info> infoList = infoRepository.findByOrderId(
+                Long.valueOf(paid.getOrderId())
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("Payed");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenOrderAccepted_then_UPDATE_2(
         @Payload OrderAccepted orderAccepted
     ) {
-        OrderAccepted event = orderAccepted;
-        System.out.println(
-            "\n\n##### listener Notify : " + orderAccepted + "\n\n"
-        );
-        // REST Request Sample
+        try {
+            if (!orderAccepted.validate()) return;
+            // view 객체 조회
 
-        // orderService.getOrder(/** mapping value needed */);
-
-        // Sample Logic //
-
+            List<Info> infoList = infoRepository.findByOrderId(
+                Long.valueOf(orderAccepted.getOrderId())
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("accepted");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    @StreamListener(
-        value = KafkaProcessor.INPUT,
-        condition = "headers['type']=='OrderRejected'"
-    )
-    public void wheneverOrderRejected_Notify(
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenOrderRejected_then_UPDATE_3(
         @Payload OrderRejected orderRejected
     ) {
-        OrderRejected event = orderRejected;
-        System.out.println(
-            "\n\n##### listener Notify : " + orderRejected + "\n\n"
-        );
-        // REST Request Sample
+        try {
+            if (!orderRejected.validate()) return;
+            // view 객체 조회
 
-        // orderService.getOrder(/** mapping value needed */);
-
-        // Sample Logic //
-
+            List<Info> infoList = infoRepository.findByOrderId(
+                Long.valueOf(orderRejected.getOrderId())
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("rejected");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    @StreamListener(
-        value = KafkaProcessor.INPUT,
-        condition = "headers['type']=='CookStarted'"
-    )
-    public void wheneverCookStarted_Notify(@Payload CookStarted cookStarted) {
-        CookStarted event = cookStarted;
-        System.out.println(
-            "\n\n##### listener Notify : " + cookStarted + "\n\n"
-        );
-        // REST Request Sample
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenCookStarted_then_UPDATE_4(
+        @Payload CookStarted cookStarted
+    ) {
+        try {
+            if (!cookStarted.validate()) return;
+            // view 객체 조회
 
-        // orderService.getOrder(/** mapping value needed */);
-
-        // Sample Logic //
-
+            List<Info> infoList = infoRepository.findByOrderId(
+                cookStarted.getOrderId()
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("cook started");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    @StreamListener(
-        value = KafkaProcessor.INPUT,
-        condition = "headers['type']=='CookFinished'"
-    )
-    public void wheneverCookFinished_Notify(
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenCookFinished_then_UPDATE_5(
         @Payload CookFinished cookFinished
     ) {
-        CookFinished event = cookFinished;
-        System.out.println(
-            "\n\n##### listener Notify : " + cookFinished + "\n\n"
-        );
-        // REST Request Sample
+        try {
+            if (!cookFinished.validate()) return;
+            // view 객체 조회
 
-        // orderService.getOrder(/** mapping value needed */);
-
-        // Sample Logic //
-
+            List<Info> infoList = infoRepository.findByOrderId(
+                cookFinished.getOrderId()
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("cook finished");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    @StreamListener(
-        value = KafkaProcessor.INPUT,
-        condition = "headers['type']=='Picked'"
-    )
-    public void wheneverPicked_Notify(@Payload Picked picked) {
-        Picked event = picked;
-        System.out.println("\n\n##### listener Notify : " + picked + "\n\n");
-        // REST Request Sample
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenPicked_then_UPDATE_6(@Payload Picked picked) {
+        try {
+            if (!picked.validate()) return;
+            // view 객체 조회
 
-        // orderService.getOrder(/** mapping value needed */);
-
-        // Sample Logic //
-
+            List<Info> infoList = infoRepository.findByOrderId(
+                picked.getOrderId()
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("food picked");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    @StreamListener(
-        value = KafkaProcessor.INPUT,
-        condition = "headers['type']=='Delivered'"
-    )
-    public void wheneverDelivered_Notify(@Payload Delivered delivered) {
-        Delivered event = delivered;
-        System.out.println("\n\n##### listener Notify : " + delivered + "\n\n");
-        // REST Request Sample
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenDelivered_then_UPDATE_7(@Payload Delivered delivered) {
+        try {
+            if (!delivered.validate()) return;
+            // view 객체 조회
 
-        // orderService.getOrder(/** mapping value needed */);
+            List<Info> infoList = infoRepository.findByOrderId(
+                delivered.getOrderId()
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("food delivered");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-        // Sample Logic //
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenOrderCanceled_then_UPDATE_8(
+        @Payload OrderCanceled orderCanceled
+    ) {
+        try {
+            if (!orderCanceled.validate()) return;
+            // view 객체 조회
 
+            List<Info> infoList = infoRepository.findByOrderId(
+                orderCanceled.getId()
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("order canceled");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenOrderRejected_then_UPDATE_9(
+        @Payload OrderRejected orderRejected
+    ) {
+        try {
+            if (!orderRejected.validate()) return;
+            // view 객체 조회
+
+            List<Info> infoList = infoRepository.findByOrderId(
+                orderRejected.getOrderId()
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("order rejected");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
 ```
