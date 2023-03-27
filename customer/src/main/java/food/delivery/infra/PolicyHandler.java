@@ -19,9 +19,6 @@ public class PolicyHandler {
     @StreamListener(KafkaProcessor.INPUT)
     public void whatever(@Payload String eventString) {}
 
-    @Autowired
-    food.delivery.external.OrderService orderService;
-
     @StreamListener(
         value = KafkaProcessor.INPUT,
         condition = "headers['type']=='OrderAccepted'"

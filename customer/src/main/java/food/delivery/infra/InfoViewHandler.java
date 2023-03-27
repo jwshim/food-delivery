@@ -41,12 +41,11 @@ public class InfoViewHandler {
         try {
             if (!paid.validate()) return;
             // view 객체 조회
-            Optional<Info> infoOptional = infoRepository.findById(
+
+            List<Info> infoList = infoRepository.findByOrderId(
                 Long.valueOf(paid.getOrderId())
             );
-
-            if (infoOptional.isPresent()) {
-                Info info = infoOptional.get();
+            for (Info info : infoList) {
                 // view 객체에 이벤트의 eventDirectValue 를 set 함
                 info.setStatus("Payed");
                 // view 레파지 토리에 save
@@ -64,12 +63,11 @@ public class InfoViewHandler {
         try {
             if (!orderAccepted.validate()) return;
             // view 객체 조회
-            Optional<Info> infoOptional = infoRepository.findById(
+
+            List<Info> infoList = infoRepository.findByOrderId(
                 Long.valueOf(orderAccepted.getOrderId())
             );
-
-            if (infoOptional.isPresent()) {
-                Info info = infoOptional.get();
+            for (Info info : infoList) {
                 // view 객체에 이벤트의 eventDirectValue 를 set 함
                 info.setStatus("accepted");
                 // view 레파지 토리에 save
@@ -87,14 +85,141 @@ public class InfoViewHandler {
         try {
             if (!orderRejected.validate()) return;
             // view 객체 조회
-            Optional<Info> infoOptional = infoRepository.findById(
+
+            List<Info> infoList = infoRepository.findByOrderId(
                 Long.valueOf(orderRejected.getOrderId())
             );
-
-            if (infoOptional.isPresent()) {
-                Info info = infoOptional.get();
+            for (Info info : infoList) {
                 // view 객체에 이벤트의 eventDirectValue 를 set 함
                 info.setStatus("rejected");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenCookStarted_then_UPDATE_4(
+        @Payload CookStarted cookStarted
+    ) {
+        try {
+            if (!cookStarted.validate()) return;
+            // view 객체 조회
+
+            List<Info> infoList = infoRepository.findByOrderId(
+                cookStarted.getOrderId()
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("cook started");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenCookFinished_then_UPDATE_5(
+        @Payload CookFinished cookFinished
+    ) {
+        try {
+            if (!cookFinished.validate()) return;
+            // view 객체 조회
+
+            List<Info> infoList = infoRepository.findByOrderId(
+                cookFinished.getOrderId()
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("cook finished");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenPicked_then_UPDATE_6(@Payload Picked picked) {
+        try {
+            if (!picked.validate()) return;
+            // view 객체 조회
+
+            List<Info> infoList = infoRepository.findByOrderId(
+                picked.getOrderId()
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("food picked");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenDelivered_then_UPDATE_7(@Payload Delivered delivered) {
+        try {
+            if (!delivered.validate()) return;
+            // view 객체 조회
+
+            List<Info> infoList = infoRepository.findByOrderId(
+                delivered.getOrderId()
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("food delivered");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenOrderCanceled_then_UPDATE_8(
+        @Payload OrderCanceled orderCanceled
+    ) {
+        try {
+            if (!orderCanceled.validate()) return;
+            // view 객체 조회
+
+            List<Info> infoList = infoRepository.findByOrderId(
+                orderCanceled.getId()
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("order canceled");
+                // view 레파지 토리에 save
+                infoRepository.save(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whenOrderRejected_then_UPDATE_9(
+        @Payload OrderRejected orderRejected
+    ) {
+        try {
+            if (!orderRejected.validate()) return;
+            // view 객체 조회
+
+            List<Info> infoList = infoRepository.findByOrderId(
+                orderRejected.getOrderId()
+            );
+            for (Info info : infoList) {
+                // view 객체에 이벤트의 eventDirectValue 를 set 함
+                info.setStatus("order rejected");
                 // view 레파지 토리에 save
                 infoRepository.save(info);
             }

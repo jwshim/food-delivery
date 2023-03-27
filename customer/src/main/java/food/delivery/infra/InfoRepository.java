@@ -7,4 +7,6 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 @RepositoryRestResource(collectionResourceRel = "infos", path = "infos")
 public interface InfoRepository
-    extends PagingAndSortingRepository<Info, Long> {}
+    extends PagingAndSortingRepository<Info, Long> {
+
+    List<Info> findByOrderId(Long orderId);}
